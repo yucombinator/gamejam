@@ -77,6 +77,7 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
         public void onCameraLocationChange(LatLng loc);
         public void onMyLocationChange(Location location);
         public void onOrbGet();
+		public void onNewRound();
     }
     
     public static enum MapType{
@@ -119,7 +120,7 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
     	.compassEnabled(true)
     	.rotateGesturesEnabled(true)
     	.scrollGesturesEnabled(true)
-    	.tiltGesturesEnabled(true);
+    	.tiltGesturesEnabled(false);
 		LinearLayout LinearLayout = (LinearLayout) inflater.inflate(R.layout.fragment_map, container, false);
     	mMapFragment = (SupportMapFragment) getFragmentManager().findFragmentByTag("mapfragment");
     	//create the fragment
@@ -255,15 +256,15 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 			
 			//TODO DELETE THIS
 		//	mMap.clear();
-			addMarker(arg0.target,1);		
-			checkForNearbyItems(location);
+			//addMarker(arg0.target,1);		
+			//checkForNearbyItems(location);
 		
 	}
 	
 	public void checkForNearbyItems(LatLng location) {
 		if(orbs.size() > 0){
 			//List<LatLng> orbToRemove = new ArrayList<LatLng>();
-			
+			Log.d(TAG, "" + orbs.size());
 			Iterator<LatLng> iter = orbs.iterator();
 		while (iter.hasNext()){
 			try{
@@ -284,6 +285,11 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 				Toast.makeText(getActivity().getApplicationContext(), "Close enough to orb", duration).show();
 				iter.remove();
 				mCallback.onOrbGet();
+				if(orbs.size() == 0){
+					addOrbs();
+					newRound();
+					Log.d(TAG, "Done!!");
+				}
 				//TODO VIBRATE
 			}
 			}catch(Exception e){
@@ -304,7 +310,7 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 
 		
 		RandomPointProvider mRPP = new RandomPointProvider(location, RandomPointProvider.Range.SHORT,getActivity().getApplicationContext());
-		addPoly(mRPP);
+		//addPoly(mRPP);
 		//addMarker(mRPP.user,1);
 		//orbs = new ArrayList<LatLng>();
 		for(int i = 0; i < 10; i++)
@@ -481,7 +487,25 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 			//mCallback.onUserLocationChange(new LatLng(location.getLatitude(), location.getLongitude()));
 	        /* ..and Animate camera to center on that location !
 	         * (the reason for we created this custom Location Source !) */
-	        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()),15.0f));
+	        //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()),15.0f));
+	        CameraPosition cameraPosition = new CameraPosition.Builder()
+	        .target(new LatLng(location.getLatitude(), location.getLongitude()))      // Sets the center of the map to Mountain View
+	        .zoom(17)                   // Sets the zoom
+	      //  .bearing(90)                // Sets the orientation of the camera to east
+	        .tilt(45)                   // Sets the tilt of the camera to 30 degrees
+	        .build();                   // Creates a CameraPosition from the builder
+	        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+			LatLng location2 = cameraPosition.target;
+			//mCallback.onCameraLocationChange(location);
+			//last_location = location;
+				
+				//TODO DELETE THIS
+			//	mMap.clear();
+				//addMarker(arg0.target,1);		
+				updateLocation(location2);
+				checkForNearbyItems(location2);
+				
 	    }
 
 	    @Override
@@ -502,6 +526,11 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 	public void addOrbs() {
 		// TODO Auto-generated method stub
 		generatePoint(last_location);
+	}
+	
+	public void newRound() {
+		// TODO Auto-generated method stub
+		mCallback.onNewRound();
 	}
 	
 }

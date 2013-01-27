@@ -23,6 +23,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.ActionBar.Tab;
@@ -67,15 +69,22 @@ public class MainActivity
     Fragment mMapFragment;
     Fragment mListFragment;
     TextView timerText;
+    TextView roundText;
     static CountDownTimer cdt;
     int a = 60000; //time remaining
+    int rounds = 1;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getSupportMenuInflater().inflate(R.menu.activity_main, menu);
-        timerText = new TextView(this);
-        timerText.setText("00");
-        getSupportActionBar().setCustomView(timerText);
+        View LL = LayoutInflater.from(this).inflate(R.layout.text_counters, null);
+        getSupportActionBar().setCustomView(LL);
+        timerText = (TextView) LL.findViewById(R.id.textTimeronTheActionBar);
+        //timerText.setText("00");
+        
+        roundText = (TextView) LL.findViewById(R.id.textRounds);
+       // roundText.setText("00");
+
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         
         return true;
@@ -244,14 +253,20 @@ public class MainActivity
 	
 	@UiThread
 	public void Countdown()
-	{
+	{		
 		if(cdt == null)
 		{
 			cdt = new CountDownTimer(a, 1000) {
 
 				public void onTick(long millisUntilFinished) 
 				{
-					timerText.setText("" + millisUntilFinished / 1000);
+					long s = 0;
+					long m = 0;
+					
+					//timerText.setText("" + millisUntilFinished / 1000);
+					m = millisUntilFinished/60000;
+					s = millisUntilFinished/1000 - m * 60;
+					timerText.setText("" + m + ":" + s);
 				}
 			
 				public void onFinish() 
@@ -283,6 +298,13 @@ public class MainActivity
 		// Only perform this pattern one time (-1 means "do not repeat")
 		v.vibrate(pattern, -1);
 	}
-	
+
+	@Override
+	public void onNewRound() {
+		// TODO Auto-generated method stub
+		rounds = rounds + 1;
+		Log.d(TAG, "rounds: " + rounds);
+		roundText.setText("Round " + rounds);
+	}	
 
 }

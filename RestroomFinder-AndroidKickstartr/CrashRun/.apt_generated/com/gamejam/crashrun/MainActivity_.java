@@ -64,14 +64,14 @@ public final class MainActivity_
     }
 
     @Override
-    public void Countdown() {
+    public void stopProgressbar() {
         handler_.post(new Runnable() {
 
 
             @Override
             public void run() {
                 try {
-                    MainActivity_.super.Countdown();
+                    MainActivity_.super.stopProgressbar();
                 } catch (RuntimeException e) {
                     Log.e("MainActivity_", "A runtime exception was thrown while executing code in a runnable", e);
                 }
@@ -82,14 +82,14 @@ public final class MainActivity_
     }
 
     @Override
-    public void stopProgressbar() {
+    public void Countdown() {
         handler_.post(new Runnable() {
 
 
             @Override
             public void run() {
                 try {
-                    MainActivity_.super.stopProgressbar();
+                    MainActivity_.super.Countdown();
                 } catch (RuntimeException e) {
                     Log.e("MainActivity_", "A runtime exception was thrown while executing code in a runnable", e);
                 }
