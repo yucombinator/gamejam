@@ -56,8 +56,7 @@ public class MainActivity
 {
 	/*TODO 
 	 * ADD CREDITS FOR GMAPS AND OSM
-	 * mark toilet using current location
-	 * Streetview
+	 * TODO one point per round?
 	 */
 	
 
@@ -72,7 +71,7 @@ public class MainActivity
     TextView roundText;
     static CountDownTimer cdt;
     int a = 60000; //time remaining
-    int rounds = 1;
+    int rounds = 0;
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -111,8 +110,11 @@ public class MainActivity
     		mMapFragment.changeView(ViewMapFragment.MapType.Terrain);
       }else if(item.getItemId() == R.id.add_new){
         	ViewMapFragment mMapFragment = (ViewMapFragment) getSupportFragmentManager().findFragmentByTag("map");
-      		mMapFragment.addOrbs();
-      		Countdown();
+      		mMapFragment.newRound();
+      		
+    		rounds = 1;
+    		roundText.setText("Round " + rounds);
+   		
       }
       return super.onOptionsItemSelected(item);
     }
@@ -235,13 +237,13 @@ public class MainActivity
 
 	@Override
 	public void onCameraLocationChange(LatLng loc) {
-        setProgressBarIndeterminateVisibility(true); 
+      //  setProgressBarIndeterminateVisibility(true); 
 		//updatePOIs(loc);
 	}
 
 	@UiThread
 	public void stopProgressbar() {
-	    setProgressBarIndeterminateVisibility(false); 
+	  //  setProgressBarIndeterminateVisibility(false); 
 		
 	}
 
@@ -267,11 +269,27 @@ public class MainActivity
 					m = millisUntilFinished/60000;
 					s = millisUntilFinished/1000 - m * 60;
 					timerText.setText("" + m + ":" + s);
+					setProgressBarIndeterminateVisibility(true); 
 				}
 			
 				public void onFinish() 
 				{
 					timerText.setText("Game over!");
+					setProgressBarIndeterminateVisibility(false);
+					
+					// Get instance of Vibrator from current Context
+					Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+					 
+					int dot = 300;
+					int short_gap = 200;    // Length of Gap Between dots/dashes
+					long[] pattern = {
+					    0,  // Start immediately
+					    dot, short_gap, dot, short_gap, dot
+					};
+					 
+					// Only perform this pattern one time (-1 means "do not repeat")
+					v.vibrate(pattern, -1);
+					
 				}
 			}.start();
 		}
@@ -305,6 +323,7 @@ public class MainActivity
 		rounds = rounds + 1;
 		Log.d(TAG, "rounds: " + rounds);
 		roundText.setText("Round " + rounds);
+  		Countdown();
 	}	
 
 }

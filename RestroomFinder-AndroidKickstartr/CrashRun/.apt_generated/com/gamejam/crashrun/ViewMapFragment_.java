@@ -50,24 +50,6 @@ public final class ViewMapFragment_
     }
 
     @Override
-    public void addPoly(final RandomPointProvider mRPP) {
-        handler_.post(new Runnable() {
-
-
-            @Override
-            public void run() {
-                try {
-                    ViewMapFragment_.super.addPoly(mRPP);
-                } catch (RuntimeException e) {
-                    Log.e("ViewMapFragment_", "A runtime exception was thrown while executing code in a runnable", e);
-                }
-            }
-
-        }
-        );
-    }
-
-    @Override
     public void UiAddOverlay(final com.google.android.gms.maps.model.GroundOverlayOptions GroundOverlayOptions) {
         handler_.post(new Runnable() {
 
@@ -94,6 +76,24 @@ public final class ViewMapFragment_
             public void run() {
                 try {
                     ViewMapFragment_.super.UiAddMarker(MarkerOptions);
+                } catch (RuntimeException e) {
+                    Log.e("ViewMapFragment_", "A runtime exception was thrown while executing code in a runnable", e);
+                }
+            }
+
+        }
+        );
+    }
+
+    @Override
+    public void addPoly(final RandomPointProvider mRPP) {
+        handler_.post(new Runnable() {
+
+
+            @Override
+            public void run() {
+                try {
+                    ViewMapFragment_.super.addPoly(mRPP);
                 } catch (RuntimeException e) {
                     Log.e("ViewMapFragment_", "A runtime exception was thrown while executing code in a runnable", e);
                 }

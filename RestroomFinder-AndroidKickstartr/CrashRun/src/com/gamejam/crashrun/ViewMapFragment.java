@@ -17,6 +17,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentTransaction;
@@ -25,6 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockFragment;
@@ -51,6 +53,7 @@ import com.googlecode.androidannotations.annotations.AfterViews;
 import com.googlecode.androidannotations.annotations.Background;
 import com.googlecode.androidannotations.annotations.EFragment;
 import com.googlecode.androidannotations.annotations.UiThread;
+import android.location.GpsStatus.Listener;
 
 @EFragment
 public class ViewMapFragment extends SherlockFragment implements CustomLocationSource.OnLocationChangedListener, GoogleMap.OnCameraChangeListener{
@@ -67,6 +70,7 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
     LatLng currentLocation;
     List<LatLng> orbs;
     boolean GENERATED = false;
+    RelativeLayout RelativeLayout;
 
 	
     /**
@@ -121,7 +125,7 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
     	.rotateGesturesEnabled(true)
     	.scrollGesturesEnabled(true)
     	.tiltGesturesEnabled(false);
-		LinearLayout LinearLayout = (LinearLayout) inflater.inflate(R.layout.fragment_map, container, false);
+    	RelativeLayout = (RelativeLayout) inflater.inflate(R.layout.fragment_map, container, false);
     	mMapFragment = (SupportMapFragment) getFragmentManager().findFragmentByTag("mapfragment");
     	//create the fragment
     	if (mMapFragment == null){
@@ -136,7 +140,7 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
     	customLocationSource = new CustomLocationSource(getActivity().getApplicationContext());
     	orbs = new ArrayList<LatLng>();
 
-    	return LinearLayout; 
+    	return RelativeLayout; 
     }
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
@@ -200,39 +204,7 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 			if(last_location!= null){
 				mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(last_location, 14));
 			}
-			
-			LocationListener ll = new LocationListener() {
-
-		        @Override
-		        public void onLocationChanged(Location arg0) {
-		            Toast.makeText(getActivity().getApplicationContext(), "Moved to "+arg0.toString(), Toast.LENGTH_LONG).show();
-		            CameraPosition cp = new CameraPosition.Builder()
-		            .target(new LatLng(arg0.getLatitude(),arg0.getLongitude()))
-		            .zoom(12)
-		            .build();     
-		            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cp));
-		            
-		        }
-
-				@Override
-				public void onProviderDisabled(String arg0) {
-					// TODO Auto-generated method stub
-					
-				}
-
-				@Override
-				public void onProviderEnabled(String provider) {
-					// TODO Auto-generated method stub
-					
-				}
-
-				@Override
-				public void onStatusChanged(String provider, int status,
-						Bundle extras) {
-					// TODO Auto-generated method stub
-					
-				}
-		};
+		
 			
 		 }
 	}
@@ -252,12 +224,11 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 	public void onCameraChange(CameraPosition arg0) {
 		LatLng location = arg0.target;
 		mCallback.onCameraLocationChange(location);
-		last_location = location;
 			
 			//TODO DELETE THIS
 		//	mMap.clear();
 			//addMarker(arg0.target,1);		
-			//checkForNearbyItems(location);
+			checkForNearbyItems(location);
 		
 	}
 	
@@ -285,10 +256,10 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 				Toast.makeText(getActivity().getApplicationContext(), "Close enough to orb", duration).show();
 				iter.remove();
 				mCallback.onOrbGet();
-				if(orbs.size() == 0){
-					addOrbs();
+				if(orbs.size() < 2){
 					newRound();
 					Log.d(TAG, "Done!!");
+					return;
 				}
 				//TODO VIBRATE
 			}
@@ -297,6 +268,7 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 			}
 
 		}
+		//Re-add other pins
 		mMap.clear();
 		for(int i = 0; i < orbs.size(); i++)
 		{
@@ -307,17 +279,20 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 	}
 	@Background
 	public void generatePoint(LatLng location){
-
-		
+		orbs.clear();
 		RandomPointProvider mRPP = new RandomPointProvider(location, RandomPointProvider.Range.SHORT,getActivity().getApplicationContext());
 		//addPoly(mRPP);
 		//addMarker(mRPP.user,1);
 		//orbs = new ArrayList<LatLng>();
 		for(int i = 0; i < 10; i++)
 		{
-			orbs.add(mRPP.getRandomPoint());
-			
-			addMarker(orbs.get(i),0);
+			LatLng point = mRPP.getRandomPoint();
+			if(point != null){
+			orbs.add(point);
+			addMarker(orbs.get((orbs.size()-1)),0);
+			}else{
+			Log.d(TAG, "Error generating points");
+			}
 		}
 	}
 	
@@ -344,8 +319,8 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 			if(type == 0){
 			 MarkerOptions MarkerOptions = new MarkerOptions()
 		       .position(Node)
-		       .title("test")
-		       .snippet("orb")
+		       .title("Orb")
+		       .snippet("Go get it!")
 		       .icon(BitmapDescriptorFactory.fromResource(R.drawable.heart));
 			 UiAddMarker(MarkerOptions);
 			    
@@ -481,6 +456,13 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 	    public void onLocationChanged(Location location) {
 	        /* Push location updates to the registered listener..
 	         * (this ensures that my-location layer will set the blue dot at the new/received location) */
+	    	Log.d(TAG, "Got "+ location.getProvider());
+			last_location = new LatLng(location.getLatitude(), location.getLongitude());
+	    	//Remove the loading splash screen
+	    	if(location.getProvider().equals("gps")){
+	    		startGame();
+	    	}
+
 	        if (mListener != null) {
 	            mListener.onLocationChanged(location);
 	        }
@@ -489,38 +471,44 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 	         * (the reason for we created this custom Location Source !) */
 	        //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()),15.0f));
 	        CameraPosition cameraPosition = new CameraPosition.Builder()
-	        .target(new LatLng(location.getLatitude(), location.getLongitude()))      // Sets the center of the map to Mountain View
+	        .target(last_location)      // Sets the center of the map to Mountain View
 	        .zoom(17)                   // Sets the zoom
 	      //  .bearing(90)                // Sets the orientation of the camera to east
 	        .tilt(45)                   // Sets the tilt of the camera to 30 degrees
 	        .build();                   // Creates a CameraPosition from the builder
 	        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
-			LatLng location2 = cameraPosition.target;
 			//mCallback.onCameraLocationChange(location);
 			//last_location = location;
 				
 				//TODO DELETE THIS
 			//	mMap.clear();
 				//addMarker(arg0.target,1);		
-				updateLocation(location2);
-				checkForNearbyItems(location2);
+				updateLocation(last_location);
+				checkForNearbyItems(last_location);
 				
 	    }
 
-	    @Override
-	    public void onStatusChanged(String s, int i, Bundle bundle) {
 
+		@Override
+	    public void onStatusChanged(String s, int i, Bundle bundle) {
+    		LinearLayout waitingLayout = (LinearLayout) RelativeLayout.findViewById(R.id.waiting);
+	    	if (i == LocationProvider.AVAILABLE){
+	    		waitingLayout.setVisibility(View.GONE);	
+	    	}else{
+	    		waitingLayout.setVisibility(View.VISIBLE);	
+	    	}
 	    }
 
 	    @Override
 	    public void onProviderEnabled(String s) {
-
+    	//	LinearLayout waitingLayout = (LinearLayout) RelativeLayout.findViewById(R.id.waiting);
+    	//	waitingLayout.setVisibility(View.GONE);
 	    }
 
 	    @Override
 	    public void onProviderDisabled(String s) {
-
+    		LinearLayout waitingLayout = (LinearLayout) RelativeLayout.findViewById(R.id.waiting);
+    		waitingLayout.setVisibility(View.VISIBLE);	
 	    }
 	}
 	public void addOrbs() {
@@ -531,6 +519,18 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 	public void newRound() {
 		// TODO Auto-generated method stub
 		mCallback.onNewRound();
+		orbs.clear();
+		mMap.clear();
+		addOrbs();
+	}
+    public void startGame() {
+		// TODO Auto-generated method stub
+		LinearLayout waitingLayout = (LinearLayout) RelativeLayout.findViewById(R.id.waiting);
+		waitingLayout.setVisibility(View.GONE);	
+		
+		if(orbs.size() < 1){
+			newRound();
+		}
 	}
 	
 }

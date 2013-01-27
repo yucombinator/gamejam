@@ -116,6 +116,8 @@ public class RandomPointProvider
 		catch(Exception e)
 		{
 			return null;
+			
+
 		}	
 	}
 }
