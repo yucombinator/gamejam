@@ -185,10 +185,9 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 		// Check if we were successful in obtaining the map.
 		if (mMap != null) {
 			// The Map is verified. It is now safe to manipulate the map.
-			mMap.setMyLocationEnabled(true);
 			mMap.setOnCameraChangeListener(this);
 			
-			mMap.setInfoWindowAdapter(new PopupAdapter(getActivity().getLayoutInflater()));
+			//mMap.setInfoWindowAdapter(new PopupAdapter(getActivity().getLayoutInflater()));
 			
             // Replace the (default) location source of the my-location layer with our custom LocationSource
             mMap.setLocationSource(customLocationSource);
@@ -224,12 +223,22 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 	public void onCameraChange(CameraPosition arg0) {
 		LatLng location = arg0.target;
 		mCallback.onCameraLocationChange(location);
-			
+		//TODO DELETE NOW
+		if(MainActivity.DEMO){
+		currentLocation=location;
+		}
 			//TODO DELETE THIS
 		//	mMap.clear();
-			//addMarker(arg0.target,1);		
+		if (MainActivity.DEMO){
+		addMarker(location,1);
+		}	
+		if(!MainActivity.paused && MainActivity.DEMO){
 			checkForNearbyItems(location);
+		}
 		
+	}
+	public void checkForNearbyItems(){
+		checkForNearbyItems(currentLocation);
 	}
 	
 	public void checkForNearbyItems(LatLng location) {
@@ -252,8 +261,12 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 			Double distance = (double) LocationOrb.distanceTo(LocationUser);
 			
 			if(distance < 15){
+
+				if(MainActivity.DEMO){
 				int duration = Toast.LENGTH_SHORT;
 				Toast.makeText(getActivity().getApplicationContext(), "Close enough to orb", duration).show();
+				}
+				
 				iter.remove();
 				mCallback.onOrbGet();
 				if(orbs.size() < 2){
@@ -282,7 +295,6 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 		orbs.clear();
 		RandomPointProvider mRPP = new RandomPointProvider(location, RandomPointProvider.Range.SHORT,getActivity().getApplicationContext());
 		//addPoly(mRPP);
-		//addMarker(mRPP.user,1);
 		//orbs = new ArrayList<LatLng>();
 		for(int i = 0; i < 10; i++)
 		{
@@ -484,7 +496,9 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 			//	mMap.clear();
 				//addMarker(arg0.target,1);		
 				updateLocation(last_location);
+				if(!MainActivity.paused){
 				checkForNearbyItems(last_location);
+				}
 				
 	    }
 
@@ -517,10 +531,15 @@ public class ViewMapFragment extends SherlockFragment implements CustomLocationS
 	}
 	
 	public void newRound() {
-		// TODO Auto-generated method stub
+		// Start new round. Reset time and add orbs
+		if (MainActivity.cdt != null) {
+			MainActivity.a = 300000;
+			MainActivity.cdt.cancel();
+		}
 		mCallback.onNewRound();
 		orbs.clear();
 		mMap.clear();
+
 		addOrbs();
 	}
     public void startGame() {

@@ -68,6 +68,24 @@ public final class ViewMapFragment_
     }
 
     @Override
+    public void addPoly(final RandomPointProvider mRPP) {
+        handler_.post(new Runnable() {
+
+
+            @Override
+            public void run() {
+                try {
+                    ViewMapFragment_.super.addPoly(mRPP);
+                } catch (RuntimeException e) {
+                    Log.e("ViewMapFragment_", "A runtime exception was thrown while executing code in a runnable", e);
+                }
+            }
+
+        }
+        );
+    }
+
+    @Override
     public void UiAddMarker(final com.google.android.gms.maps.model.MarkerOptions MarkerOptions) {
         handler_.post(new Runnable() {
 
@@ -86,14 +104,14 @@ public final class ViewMapFragment_
     }
 
     @Override
-    public void addPoly(final RandomPointProvider mRPP) {
-        handler_.post(new Runnable() {
+    public void updateLocation(final LatLng location) {
+        BackgroundExecutor.execute(new Runnable() {
 
 
             @Override
             public void run() {
                 try {
-                    ViewMapFragment_.super.addPoly(mRPP);
+                    ViewMapFragment_.super.updateLocation(location);
                 } catch (RuntimeException e) {
                     Log.e("ViewMapFragment_", "A runtime exception was thrown while executing code in a runnable", e);
                 }
@@ -130,24 +148,6 @@ public final class ViewMapFragment_
             public void run() {
                 try {
                     ViewMapFragment_.super.generatePoint(location);
-                } catch (RuntimeException e) {
-                    Log.e("ViewMapFragment_", "A runtime exception was thrown while executing code in a runnable", e);
-                }
-            }
-
-        }
-        );
-    }
-
-    @Override
-    public void updateLocation(final LatLng location) {
-        BackgroundExecutor.execute(new Runnable() {
-
-
-            @Override
-            public void run() {
-                try {
-                    ViewMapFragment_.super.updateLocation(location);
                 } catch (RuntimeException e) {
                     Log.e("ViewMapFragment_", "A runtime exception was thrown while executing code in a runnable", e);
                 }

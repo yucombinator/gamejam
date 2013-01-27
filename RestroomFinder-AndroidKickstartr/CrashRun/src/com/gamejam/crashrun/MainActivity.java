@@ -13,7 +13,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
@@ -59,6 +61,8 @@ public class MainActivity
 	 * TODO one point per round?
 	 */
 	
+    static long a = 300000; //time remaining
+    static long orb_value = 60000;
 
 	public static String TAG = "BathroomFinder";
 //	static ArrayList <OSMNode> allTapItem = new ArrayList<OSMNode>();
@@ -70,13 +74,19 @@ public class MainActivity
     TextView timerText;
     TextView roundText;
     static CountDownTimer cdt;
-    int a = 60000; //time remaining
+
     int rounds = 0;
+	static boolean paused = false;
+	private Menu _abs_menu;
+	View LL ;
+	static boolean DEMO = false;
+
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        _abs_menu = menu;
         getSupportMenuInflater().inflate(R.menu.activity_main, menu);
-        View LL = LayoutInflater.from(this).inflate(R.layout.text_counters, null);
+        LL = LayoutInflater.from(this).inflate(R.layout.text_counters, null);
         getSupportActionBar().setCustomView(LL);
         timerText = (TextView) LL.findViewById(R.id.textTimeronTheActionBar);
         //timerText.setText("00");
@@ -86,6 +96,11 @@ public class MainActivity
 
         getSupportActionBar().setDisplayShowCustomEnabled(true);
         
+        //Workaround enable location layer on map after menu load
+      	ViewMapFragment mMapFragment = (ViewMapFragment) getSupportFragmentManager().findFragmentByTag("map");
+		if (mMapFragment.mMap != null) {
+      	mMapFragment.mMap.setMyLocationEnabled(true);
+		}
         return true;
     }
     
@@ -108,6 +123,56 @@ public class MainActivity
       }else if(item.getItemId() == R.id.terrain){
       	ViewMapFragment mMapFragment = (ViewMapFragment) getSupportFragmentManager().findFragmentByTag("map");
     		mMapFragment.changeView(ViewMapFragment.MapType.Terrain);
+      }else if(item.getItemId() == R.id.menu_quit){
+        	finish();
+        	
+      }else if(item.getItemId() == R.id.pauseBtn){
+      	if(paused == true)
+      	{
+      		cdt = null;
+     		Countdown();
+          	MenuItem arrowtoggle = _abs_menu.findItem(R.id.pauseBtn);
+          	arrowtoggle.setIcon(getResources().getDrawable(R.drawable.ic_media_pause));
+          	paused  = false;
+          	
+            roundText = (TextView) LL.findViewById(R.id.textRounds);
+            
+    		roundText.setText("Round " + rounds);
+    		
+          	ViewMapFragment mMapFragment = (ViewMapFragment) getSupportFragmentManager().findFragmentByTag("map");
+          	mMapFragment.checkForNearbyItems();
+    		
+      	} else {
+     		cdt.cancel();
+          	MenuItem arrowtoggle = _abs_menu.findItem(R.id.pauseBtn);
+          	arrowtoggle.setIcon(getResources().getDrawable(R.drawable.ic_media_play));
+          	paused = true;
+          	
+            roundText = (TextView) LL.findViewById(R.id.textRounds);
+            
+    		roundText.setText("Game Paused");
+
+      	}
+      	
+      }else if(item.getItemId() == R.id.help){
+          showSimplePopUp(this.getString(R.string.help1), this.getString(R.string.help_text));
+      }else if(item.getItemId() == R.id.share){
+    	  Intent s = new Intent(android.content.Intent.ACTION_SEND);
+
+          s.setType("text/plain");
+          s.putExtra(Intent.EXTRA_SUBJECT, "I just ran " + rounds + " rounds in CrashCourse!");
+          s.putExtra(Intent.EXTRA_TEXT, "How many can you do? Get the game at http://globalgamejam.org/2013/crashcourse");
+
+          startActivity(Intent.createChooser(s, "Quote"));
+
+      }else if(item.getItemId() == R.id.demo_mode){
+    	  if(DEMO == false) {
+    		  DEMO = true;
+    		  }
+    	  else{
+    		  DEMO = false;
+    	  }
+
       }else if(item.getItemId() == R.id.add_new){
         	ViewMapFragment mMapFragment = (ViewMapFragment) getSupportFragmentManager().findFragmentByTag("map");
       		mMapFragment.newRound();
@@ -116,9 +181,27 @@ public class MainActivity
     		roundText.setText("Round " + rounds);
    		
       }
+      
+
+    
       return super.onOptionsItemSelected(item);
     }
-    
+    public void showSimplePopUp(String title, String text) {
+
+      	 AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+      	 alertDialog.setTitle(title);
+      	 alertDialog.setMessage(text);
+       //alertDialog.setIcon(R.drawable.icon);
+      	 alertDialog.setButton(DialogInterface.BUTTON_POSITIVE,getResources().getString(android.R.string.ok), new DialogInterface.OnClickListener() {
+      	  
+      		 public void onClick(DialogInterface dialog, int which) {
+      	     // Do nothing but close the dialog
+      	    }
+      	   });
+
+      	 // Remember, create doesn't show the dialog
+      	alertDialog.show();
+      	}
     @Override
     public void onResume(){
     	super.onResume();
@@ -260,15 +343,22 @@ public class MainActivity
 		{
 			cdt = new CountDownTimer(a, 1000) {
 
+
 				public void onTick(long millisUntilFinished) 
 				{
 					long s = 0;
 					long m = 0;
 					
 					//timerText.setText("" + millisUntilFinished / 1000);
+					a = millisUntilFinished;
+					//Log.d(TAG, "&" + millisUntilFinished);
 					m = millisUntilFinished/60000;
 					s = millisUntilFinished/1000 - m * 60;
-					timerText.setText("" + m + ":" + s);
+					String sec = String.valueOf(s);
+					if (s == 0){
+						sec = "00";
+					}
+					timerText.setText("" + m + ":" + sec);
 					setProgressBarIndeterminateVisibility(true); 
 				}
 			
@@ -301,7 +391,7 @@ public class MainActivity
 		Log.d(TAG, ""+ a);
 		cdt.cancel();
 		cdt = null;
-		a += 30000;
+		a += orb_value;
 		Countdown();
 		// Get instance of Vibrator from current Context
 		Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -322,7 +412,11 @@ public class MainActivity
 		// TODO Auto-generated method stub
 		rounds = rounds + 1;
 		Log.d(TAG, "rounds: " + rounds);
+        timerText = (TextView) LL.findViewById(R.id.textTimeronTheActionBar);
+        roundText = (TextView) LL.findViewById(R.id.textRounds);
+        
 		roundText.setText("Round " + rounds);
+		timerText.setText("5:00");
   		Countdown();
 	}	
 

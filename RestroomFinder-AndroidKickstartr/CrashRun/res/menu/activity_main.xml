@@ -1,8 +1,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     
     
-    <item android:id="@+id/menu_settings"
-        android:title="@string/menu_settings"
+    <item android:id="@+id/menu_quit"
+        android:title="@string/quit"
         android:orderInCategory="100"
         android:showAsAction="never" />
     
@@ -31,5 +31,9 @@
     android:showAsAction="ifRoom|withText"
     android:title="@string/terrain"/>
         </menu> 
-        </item><item android:id="@+id/add_new" android:title="@string/add_new" android:icon="@drawable/ic_menu_add" android:showAsAction="always" android:visible="true"></item>
+        </item><item android:id="@+id/add_new" android:title="@string/add_new" android:icon="@drawable/ic_menu_revert" android:showAsAction="always" android:visible="true"></item>
+        <item android:id="@+id/pauseBtn" android:title="@string/pause" android:icon="@drawable/ic_media_pause" android:showAsAction="always"></item>
+        <item android:id="@+id/help" android:icon="@drawable/ic_menu_help" android:title="@string/help" android:showAsAction="ifRoom"></item>
+        <item android:id="@+id/share" android:icon="@drawable/ic_menu_share" android:title="@string/share" android:showAsAction="always"></item>
+        <item android:id="@+id/demo_mode" android:title="@string/demobtn"></item>
 </menu>

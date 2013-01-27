@@ -15,6 +15,7 @@ public class LegalNoticesActivity extends SherlockActivity {
     setContentView(R.layout.activity_legal);
 
     TextView legal=(TextView)findViewById(R.id.legal);
+    legal.setText("By Steven Dahdah and Yu Chen Hou. \n Concordia Global Gamejam 2013 \n \n");
     legal.append(GooglePlayServicesUtil.getOpenSourceSoftwareLicenseInfo(this));
 
     getSupportActionBar().setHomeButtonEnabled(true);
